@@ -1,0 +1,103 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petclinic-app-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petclinic-app-mysql
+  template:
+    metadata:
+      labels:
+        app: petclinic-app-mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          envFrom:
+            - secretRef:
+                name: petclinic-app-mysql
+          volumeMounts:
+            - name: petclinic-app-mysql-data
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: petclinic-app-mysql-data
+          persistentVolumeClaim:
+            claimName: petclinic-app-mysql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petclinic-app-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petclinic-app-frontend
+  template:
+    metadata:
+      labels:
+        app: petclinic-app-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/mahangoekhan/spring-petclinic:v1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: mysql
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://petclinic-app-mysql:3306/petclinic
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: petclinic-app-mysql
+                  key: MYSQL_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: petclinic-app-mysql
+                  key: MYSQL_PASSWORD
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petclinic-app-phpmyadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petclinic-app-phpmyadmin
+  template:
+    metadata:
+      labels:
+        app: petclinic-app-phpmyadmin
+    spec:
+      containers:
+        - name: phpmyadmin
+          image: bitnami/phpmyadmin:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PHPMYADMIN_DATABASE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: petclinic-app-mysql
+                  key: database-host
+            - name: PHPMYADMIN_DATABASE_PORT_NUMBER
+              value: "3306"
+            - name: PHPMYADMIN_DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: petclinic-app-mysql
+                  key: database-user
+            - name: PHPMYADMIN_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: petclinic-app-mysql
+                  key: database-password
