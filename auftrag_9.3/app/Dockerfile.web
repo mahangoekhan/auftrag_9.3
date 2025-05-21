@@ -1,6 +1,0 @@
-FROM nginxinc/nginx-unprivileged
-
-# Richtiger Ordnername angepasst!
-COPY web/ /usr/share/nginx/html/
-
-EXPOSE 8080

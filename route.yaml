@@ -1,0 +1,27 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: petclinic-app-frontend
+spec:
+  to:
+    kind: Service
+    name: petclinic-app-frontend
+  port:
+    targetPort: petclinic-app-frontend
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: petclinic-app-phpmyadmin
+spec:
+  to:
+    kind: Service
+    name: petclinic-app-phpmyadmin
+  port:
+    targetPort: petclinic-app-phpmyadmin
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

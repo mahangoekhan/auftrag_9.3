@@ -1,0 +1,53 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: petclinic-app-mysql
+  labels:
+    app: petclinic-app-mysql
+    app.kubernetes.io/part-of: html-petclinic-app
+spec:
+  ports:
+    - name: petclinic-app-mysql
+      protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: petclinic-app-mysql #pod
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: petclinic-app-frontend
+  labels:
+    app: petclinic-app-frontend
+    app.kubernetes.io/part-of: html-petclinic-app
+spec:
+  ports:
+    - name: petclinic-app-frontend
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: petclinic-app-frontend #pod
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: petclinic-app-phpmyadmin
+  labels:
+    app: petclinic-app-phpmyadmin
+    app.kubernetes.io/part-of: html-petclinic-app
+spec:
+  ports:
+    - name: petclinic-app-phpmyadmin
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: petclinic-app-phpmyadmin #pod
