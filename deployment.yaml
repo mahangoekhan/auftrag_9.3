@@ -1,103 +1,104 @@
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: petclinic-app-mysql
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: petclinic-app-mysql
-  template:
-    metadata:
-      labels:
-        app: petclinic-app-mysql
-    spec:
-      containers:
-        - name: mysql
-          image: mysql:8.0
-          ports:
-            - containerPort: 3306
-          envFrom:
-            - secretRef:
-                name: petclinic-app-mysql
-          volumeMounts:
-            - name: petclinic-app-mysql-data
-              mountPath: /var/lib/mysql
-      volumes:
-        - name: petclinic-app-mysql-data
-          persistentVolumeClaim:
-            claimName: petclinic-app-mysql
+apiVersion: apps/v1                          # Gibt die API-Version an, die für Deployments verwendet wird – "apps/v1" ist die aktuelle Version
+kind: Deployment                             # Der Typ der Ressource – hier ein Deployment, das Pods verwaltet und automatisch neu startet
+metadata:                                    # Metadaten über dieses Objekt (Name, Labels, etc.)
+  name: petclinic-app-mysql                  # Der Name des Deployments – muss eindeutig im Namespace sein
+spec:                                        # Spezifikation des Deployments, beschreibt gewünschtes Verhalten
+  replicas: 1                                # Anzahl der gewünschten Pod-Replikate (hier genau 1 Datenbankinstanz)
+  selector:                                  # Selektor, um Pods zu identifizieren, die von diesem Deployment verwaltet werden
+    matchLabels:                             # Der Selektor verwendet Label-Matching
+      app: petclinic-app-mysql               # Nur Pods mit diesem Label werden verwaltet (muss mit template.metadata.labels übereinstimmen)
+  template:                                  # Vorlage für die Pods, die erstellt werden sollen
+    metadata:                                # Metadaten des Pods
+      labels:                                # Labels, die dem Pod zugewiesen werden
+        app: petclinic-app-mysql             # Label mit Key `app` und Wert `petclinic-app-mysql` (wichtig für Services, Monitoring, etc.)
+    spec:                                    # Spezifikation des Pods
+      containers:                            # Liste der Container im Pod (hier nur ein Container für MySQL)
+        - name: mysql                        # Name des Containers (wird z. B. in Logs angezeigt)
+          image: mysql:8.0                   # Container-Image von Docker Hub: offizielle MySQL-Version 8.0
+          ports:                             # Liste der Ports, die vom Container verwendet werden
+            - containerPort: 3306            # Öffnet Port 3306 im Container – Standardport für MySQL
+          envFrom:                           # Umgebungsvariablen aus externen Quellen laden
+            - secretRef:                     # Referenz auf ein Secret
+                name: petclinic-app-mysql    # Name des Secrets, das die Umgebungsvariablen (z. B. MYSQL_USER, MYSQL_PASSWORD) enthält
+          volumeMounts:                      # Liste von Speicherorten, die ins Dateisystem des Containers eingebunden werden
+            - name: petclinic-app-mysql-data # Name des Volumes, das gemountet wird
+              mountPath: /var/lib/mysql      # Zielpfad im Container – hier speichert MySQL seine Daten
+      volumes:                               # Liste der Volumes, die dem Pod zur Verfügung stehen
+        - name: petclinic-app-mysql-data     # Name des Volumes (muss zu volumeMounts.name passen)
+          persistentVolumeClaim:             # Verwendet einen bestehenden Persistent Volume Claim (PVC)
+            claimName: petclinic-app-mysql   # Name des PVCs, der den Speicher bereitstellt (z. B. 1Gi persistenten Speicher)
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apps/v1                          # Wieder die API-Version
+kind: Deployment                             # Wieder ein Deployment – diesmal für das Spring Boot Frontend
 metadata:
-  name: petclinic-app-frontend
+  name: petclinic-app-frontend               # Name des Frontend-Deployments
 spec:
-  replicas: 1
+  replicas: 1                                # Es soll genau 1 Instanz des Frontends ausgeführt werden
   selector:
     matchLabels:
-      app: petclinic-app-frontend
+      app: petclinic-app-frontend            # Label-Selektor – wählt Pods mit diesem Label aus
   template:
     metadata:
       labels:
-        app: petclinic-app-frontend
+        app: petclinic-app-frontend          # Label des Pods, wird z. B. von Services benutzt
     spec:
       containers:
-        - name: frontend
-          image: ghcr.io/mahangoekhan/spring-petclinic:v1
+        - name: frontend                     # Containername (frei wählbar)
+          image: ghcr.io/mahangoekhan/spring-petclinic:v1   # Container-Image aus der GitHub Container Registry (v1-Version des Projekts)
           ports:
-            - containerPort: 8080
-          env:
+            - containerPort: 8080            # Der Container lauscht auf Port 8080 – Standard bei Spring Boot
+          env:                               # Umgebungsvariablen, die in der Spring-App verwendet werden
             - name: SPRING_PROFILES_ACTIVE
-              value: mysql
+              value: mysql                   # Aktiviert das Profil "mysql" in der Spring Boot Anwendung (z. B. für DB-Einstellungen)
             - name: SPRING_DATASOURCE_URL
               value: jdbc:mysql://petclinic-app-mysql:3306/petclinic
+                                              # JDBC-URL für die Datenbankverbindung – Containername als Hostname (funktioniert dank Kubernetes DNS)
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
-                secretKeyRef:
-                  name: petclinic-app-mysql
-                  key: MYSQL_USER
+                secretKeyRef:                # Wert aus einem Secret lesen
+                  name: petclinic-app-mysql  # Name des Secrets
+                  key: MYSQL_USER            # Schlüssel im Secret, der den DB-Benutzernamen enthält
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: petclinic-app-mysql
-                  key: MYSQL_PASSWORD
+                  name: petclinic-app-mysql  # Name des gleichen Secrets
+                  key: MYSQL_PASSWORD        # Schlüssel im Secret, der das Passwort enthält
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apps/v1                          # API-Version
+kind: Deployment                             # Typ: Deployment
 metadata:
-  name: petclinic-app-phpmyadmin
+  name: petclinic-app-phpmyadmin             # Name dieses Deployments (für die Admin-Oberfläche)
 spec:
-  replicas: 1
+  replicas: 1                                # Anzahl der Pods, die laufen sollen
   selector:
     matchLabels:
-      app: petclinic-app-phpmyadmin
+      app: petclinic-app-phpmyadmin          # Selektor, um die Pods zu identifizieren
   template:
     metadata:
       labels:
-        app: petclinic-app-phpmyadmin
+        app: petclinic-app-phpmyadmin        # Label des Pods – muss zum Selektor passen
     spec:
       containers:
-        - name: phpmyadmin
-          image: bitnami/phpmyadmin:latest
+        - name: phpmyadmin                   # Containername
+          image: bitnami/phpmyadmin:latest   # Bitnami-Image von phpMyAdmin – aktuelle Version
           ports:
-            - containerPort: 8080
-          env:
+            - containerPort: 8080            # phpMyAdmin läuft hier auf Port 8080
+          env:                               # Umgebungsvariablen für die Konfiguration von phpMyAdmin
             - name: PHPMYADMIN_DATABASE_HOST
               valueFrom:
                 secretKeyRef:
-                  name: petclinic-app-mysql
-                  key: database-host
+                  name: petclinic-app-mysql  # Secret mit DB-Informationen
+                  key: database-host         # Hostname der Datenbank, z. B. "petclinic-app-mysql"
             - name: PHPMYADMIN_DATABASE_PORT_NUMBER
-              value: "3306"
+              value: "3306"                  # Port der MySQL-Datenbank (Standard)
             - name: PHPMYADMIN_DATABASE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: petclinic-app-mysql
-                  key: database-user
+                  key: database-user         # Benutzername aus Secret
             - name: PHPMYADMIN_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: petclinic-app-mysql
-                  key: database-password
+                  key: database-password     # Passwort aus Secret

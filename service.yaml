@@ -1,53 +1,53 @@
-kind: Service
-apiVersion: v1
+kind: Service                                     # Ressourcentyp: Service – stellt Netzwerkzugriff auf Pods bereit
+apiVersion: v1                                    # API-Version für grundlegende Ressourcen
 metadata:
-  name: petclinic-app-mysql
+  name: petclinic-app-mysql                      # Name des Services – wird z. B. in Umgebungsvariablen oder DNS verwendet
   labels:
-    app: petclinic-app-mysql
-    app.kubernetes.io/part-of: html-petclinic-app
+    app: petclinic-app-mysql                     # Label, dient zur Identifikation oder Gruppierung
+    app.kubernetes.io/part-of: html-petclinic-app # Zusatzlabel für App-Zugehörigkeit, z. B. für Monitoring, CI/CD, etc.
 spec:
-  ports:
-    - name: petclinic-app-mysql
-      protocol: TCP
-      port: 3306
-      targetPort: 3306
-  type: ClusterIP
-  sessionAffinity: None
+  ports:                                          # Definiert, auf welchen Ports der Service verfügbar ist
+    - name: petclinic-app-mysql                  # Portname (wird z. B. in Routen oder bei TLS verwendet)
+      protocol: TCP                              # Protokoll – bei MySQL immer TCP
+      port: 3306                                  # Externer Port des Services (wie er innerhalb des Clusters erreichbar ist)
+      targetPort: 3306                            # Port im Zielpod (im Container laufender MySQL-Server)
+  type: ClusterIP                                 # Interner Service-Typ – erreichbar nur **innerhalb** des Clusters (Standard)
+  sessionAffinity: None                           # Keine Sitzungsbindung – Requests landen bei beliebigen passenden Pods
   selector:
-    app: petclinic-app-mysql #pod
+    app: petclinic-app-mysql                     # Selektor für passende Pods (mit diesem Label)
 ---
-kind: Service
+kind: Service                                     # Wieder ein Kubernetes-Service
 apiVersion: v1
 metadata:
-  name: petclinic-app-frontend
+  name: petclinic-app-frontend                   # Name des Services für das Frontend
   labels:
-    app: petclinic-app-frontend
-    app.kubernetes.io/part-of: html-petclinic-app
+    app: petclinic-app-frontend                  # Label zur Identifikation
+    app.kubernetes.io/part-of: html-petclinic-app # Teil derselben Anwendung
 spec:
   ports:
-    - name: petclinic-app-frontend
-      protocol: TCP
-      port: 8080
-      targetPort: 8080
-  type: ClusterIP
-  sessionAffinity: None
+    - name: petclinic-app-frontend               # Portname (wird in Routen referenziert)
+      protocol: TCP                              # Web-Zugriff erfolgt über TCP
+      port: 8080                                  # Port des Services (im Cluster erreichbar)
+      targetPort: 8080                            # Interner Port im Pod (Container läuft auf 8080)
+  type: ClusterIP                                 # Wieder ein interner Cluster-Service
+  sessionAffinity: None                           # Keine Bindung zwischen Client-IP und Pod
   selector:
-    app: petclinic-app-frontend #pod
+    app: petclinic-app-frontend                  # Nur Pods mit diesem Label werden vom Service weitergeleitet
 ---
-kind: Service
+kind: Service                                     # Service-Ressource
 apiVersion: v1
 metadata:
-  name: petclinic-app-phpmyadmin
+  name: petclinic-app-phpmyadmin                 # Name des phpMyAdmin-Services
   labels:
-    app: petclinic-app-phpmyadmin
-    app.kubernetes.io/part-of: html-petclinic-app
+    app: petclinic-app-phpmyadmin                # Label zur Gruppierung
+    app.kubernetes.io/part-of: html-petclinic-app # Teil der HTML-Petclinic-Anwendung
 spec:
   ports:
-    - name: petclinic-app-phpmyadmin
-      protocol: TCP
-      port: 8080
-      targetPort: 8080
-  type: ClusterIP
-  sessionAffinity: None
+    - name: petclinic-app-phpmyadmin             # Portname (für Route-Zuweisung wichtig)
+      protocol: TCP                              # TCP-Protokoll für HTTP-Zugriff
+      port: 8080                                  # Port innerhalb des Clusters
+      targetPort: 8080                            # Der Port, auf dem phpMyAdmin im Container lauscht
+  type: ClusterIP                                 # Service-Typ: nur intern erreichbar (außer via Route)
+  sessionAffinity: None                           # Keine Sitzungsbindung
   selector:
-    app: petclinic-app-phpmyadmin #pod
+    app: petclinic-app-phpmyadmin                # Selektor, der Pods mit diesem Label auswählt

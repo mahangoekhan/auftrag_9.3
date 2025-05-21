@@ -1,27 +1,27 @@
-apiVersion: route.openshift.io/v1
-kind: Route
+apiVersion: route.openshift.io/v1                     # OpenShift-spezifische API-Version für Routen (nicht Teil von Kubernetes Standard)
+kind: Route                                           # Ressourcentyp: Route – ermöglicht externen HTTP/HTTPS-Zugriff auf einen Service
 metadata:
-  name: petclinic-app-frontend
-spec:
-  to:
-    kind: Service
-    name: petclinic-app-frontend
-  port:
-    targetPort: petclinic-app-frontend
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
+  name: petclinic-app-frontend                        # Name der Route – wird für die URL und Verwaltung verwendet
+spec:                                                 # Spezifikation der Route
+  to:                                                 # Ziel der Weiterleitung (Service)
+    kind: Service                                     # Typ des Ziels: ein Kubernetes-Service
+    name: petclinic-app-frontend                      # Name des Services, zu dem der externe Traffic geleitet werden soll
+  port:                                               # Definiert, auf welchen Port des Services weitergeleitet werden soll
+    targetPort: petclinic-app-frontend                # Portname im Service (muss exakt zum Portnamen in der Service-Definition passen)
+  tls:                                                # TLS-Konfiguration für verschlüsselte HTTPS-Verbindung
+    termination: edge                                 # TLS wird an der Route terminiert (Edge-Termination: TLS nur bis zum Router, intern HTTP)
+    insecureEdgeTerminationPolicy: Redirect           # HTTP-Anfragen werden automatisch auf HTTPS umgeleitet
 ---
-apiVersion: route.openshift.io/v1
-kind: Route
+apiVersion: route.openshift.io/v1                     # OpenShift-API für Routen
+kind: Route                                           # Route-Ressourcentyp
 metadata:
-  name: petclinic-app-phpmyadmin
+  name: petclinic-app-phpmyadmin                      # Name der Route für phpMyAdmin
 spec:
   to:
-    kind: Service
-    name: petclinic-app-phpmyadmin
+    kind: Service                                     # Das Ziel ist ein Service
+    name: petclinic-app-phpmyadmin                    # Name des phpMyAdmin-Services
   port:
-    targetPort: petclinic-app-phpmyadmin
+    targetPort: petclinic-app-phpmyadmin              # Portname aus dem Service – muss exakt übereinstimmen
   tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
+    termination: edge                                 # TLS wird am OpenShift-Router beendet (Edge-Terminierung)
+    insecureEdgeTerminationPolicy: Redirect           # HTTP wird zu HTTPS umgeleitet (z. B. http → https)

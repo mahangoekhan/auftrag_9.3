@@ -1,0 +1,24 @@
+apiVersion: autoscaling/v2                     # API-Version für HPA (v2 bietet erweiterte Metrik-Unterstützung, z. B. mehrere Ressourcen)
+kind: HorizontalPodAutoscaler                  # Ressourcentyp: HorizontalPodAutoscaler – skaliert Pods automatisch basierend auf Metriken
+metadata:
+  name: quotes                                  # Name des HPA-Objekts – sollte sinnvoll gewählt werden (hier: evtl. unpassend, Name für "petclinic-app-frontend" wäre logischer)
+spec:
+  scaleTargetRef:                               # Zielressource, die automatisch skaliert werden soll
+    apiVersion: apps/v1                         # API-Version der Zielressource (Deployment ist Teil von apps/v1)
+    kind: Deployment                            # Typ der zu skalierenden Ressource – ein Deployment
+    name: petclinic-app-frontend                # Name des Deployments, das skaliert werden soll
+  minReplicas: 1                                # Mindestanzahl an Pods – selbst bei geringer Last wird mindestens 1 Pod bereitgestellt
+  maxReplicas: 3                                # Maximalanzahl an Pods – bei hoher Last werden höchstens 3 Pods gestartet
+  metrics:                                      # Liste der Metriken, nach denen skaliert werden soll
+    - type: Resource                            # Erste Metrik basiert auf einer Ressourcenverwendung (z. B. CPU oder RAM)
+      resource:
+        name: cpu                               # Es wird auf die CPU-Auslastung geschaut
+        target:
+          type: Utilization                     # Typ des Zielwerts – hier: Prozentuale Auslastung der verfügbaren CPU
+          averageUtilization: 80                # Zielwert: Wenn CPU-Auslastung **durchschnittlich über 80 %** liegt → skaliere hoch
+    - type: Resource                            # Zweite Metrik: auch eine Ressource
+      resource:
+        name: memory                            # Dieses Mal: Speicherverbrauch (RAM)
+        target:
+          type: Utilization                     # Wieder prozentuale Auslastung
+          averageUtilization: 80                # Wenn RAM-Auslastung **durchschnittlich über 80 %** liegt → skaliere hoch
